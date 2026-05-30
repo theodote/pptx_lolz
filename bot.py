@@ -35,17 +35,22 @@ Heyo! You can submit:
 async def save_slide(update: Update, context: ContextTypes.DEFAULT_TYPE):
     player = pl.players[update.effective_user.id]
     
-    attachment = update.message.effective_attachment
-    await player.save_slide(attachment)
-    # file_name = f"{player.count_slides + 1}"
-    # file_path = player.path / Path(file_name)
-    # file = await attachment.get_file()
-    # await file.download_to_drive(file_path)
-    # player.update_slides()
-    
-    msg = f"""
-    Awesome! You can submit {player.remaining_slides} more slides.
-    """
+    if player.remaining_slides > 0:
+        attachment = update.message.effective_attachment
+        if isinstance(attachment, Sequence):    # Photos are weird :/
+            attachment = attachment[-1]
+            extension = "jpg"
+        else:
+            extension = attachment.file_name.split('.')[-1]
+        await player.save_slide(attachment, extension)
+        
+        msg = f"""
+        Awesome! You can submit {player.remaining_slides} more slides.
+        """
+    else:
+        msg = """
+        You're out of slides! You can trash them ALL and start fresh with /clear_slides.
+        """
     await context.bot.send_message(
         chat_id = update.effective_chat.id,
         text=msg
@@ -59,8 +64,8 @@ if __name__ == '__main__':
     app = ApplicationBuilder().token(TOKEN).build()
 
     app.add_handler(MessageHandler(
-        filters.ANIMATION
-        | filters.PHOTO
+        filters.PHOTO
+        # | filters.ANIMATION     # TODO: turn this back into a gif :(
         | filters.Document.IMAGE
         | filters.Document.GIF
         | filters.Document.JPG,

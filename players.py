@@ -69,12 +69,13 @@ class Player:
     def update_slides(self):
         self.slide_paths = [
             path
-            for path in Path(".").iterdir()
+            for path in self.path.iterdir()
             if path.is_file()
             and path.suffix.lower() in image_formats
         ]
-    async def save_slide(self, attachment):
-        file_name = f"{self.count_slides + 1}"
+    async def save_slide(self, attachment, extension):
+        print(attachment)
+        file_name = f"{self.count_slides + 1}.{extension}"
         file_path = self.path / Path(file_name)
         file = await attachment.get_file()
         await file.download_to_drive(file_path)
