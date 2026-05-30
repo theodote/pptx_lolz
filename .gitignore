@@ -1,3 +1,4 @@
 *.env
 players/
 *.pptx
+__pycache__/*
