@@ -3,11 +3,9 @@ from telegram import User, File
 import json
 import asyncio
 import imageio
+from collections import UserDict
 
-players = {}
-
-players_path = Path("./players")
-image_formats = ['.png', '.jpg', '.jpeg', '.gif']
+slide_formats = ['.png', '.jpg', '.jpeg', '.gif']
 
 MAX_SLIDES = 10
 MAX_TITLES = 3
@@ -26,6 +24,7 @@ class Player:
             self.last_name = user.last_name
             self.username = user.username
         
+        global players
         self.path = players_path / Path(str(self.id))
         self.user_path = self.path / Path("user.json")
         self.titles_path = self.path / Path(f"titles.json")
@@ -36,7 +35,7 @@ class Player:
         self.titles_path.touch()
         self.subtitles_path.touch()
         
-        self.slides = []
+        self.slide_paths = []
         self.update_slides()
         
         self.titles = []
@@ -73,7 +72,7 @@ class Player:
             path
             for path in self.path.iterdir()
             if path.is_file()
-            and path.suffix.lower() in image_formats
+            and path.suffix.lower() in slide_formats
         ]
     
     async def save_slide(self, attachment, extension=None) -> Path:
@@ -145,17 +144,35 @@ class Player:
         self.subtitles.clear()
         self.save_subtitles()
         
-def load_players():
-    global players
-    players_path.mkdir(exist_ok=True)
-    ids = [
-        int(path.name)
-        for path in players_path.iterdir()
-        if path.is_dir()
-    ]
+class Players(UserDict):
+    def __init__(self, path: Path):
+        super().__init__()
+        self.path = path
+        self.path.mkdir(exist_ok=True)
+        ids = [
+            int(path.name)
+            for path in self.path.iterdir()
+            if path.is_dir()
+        ]
+        self.update({ id: Player(id=id) for id in ids })
+    def save(self):
+        for player in self.values():
+            player.save()
+        
+players_path = Path("./players")
+players = Players(players_path)
+        
+# def load_players():
+#     global players
+#     players_path.mkdir(exist_ok=True)
+#     ids = [
+#         int(path.name)
+#         for path in players_path.iterdir()
+#         if path.is_dir()
+#     ]
     
-    players = { id: Player(id=id) for id in ids }
+#     players = { id: Player(id=id) for id in ids }
     
-def save_players():
-    for player in players:
-        player.save()
+# def save_players():
+#     for player in players:
+#         player.save()

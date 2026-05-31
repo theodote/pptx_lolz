@@ -97,6 +97,11 @@ The subtitles should aid the titles, but NOT contain the actual topics to avoid 
 Remember, you want to submit something that OTHER PLAYERS will present in front of you. Choose your strategy accordingly.
     """)
     
+async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("""
+Not sure what you're trying to say. Need some /help?
+    """)
+    
 
 
 async def save_slide(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -224,8 +229,6 @@ async def clear_subtitles(update: Update, context: ContextTypes.DEFAULT_TYPE):
 INPUT_TITLE, INPUT_SUBTITLE = range(2)
 
 if __name__ == '__main__':
-    pl.load_players()
-    
     with open("token.env") as f:
         TOKEN = f.read()
     app = ApplicationBuilder().token(TOKEN).build()
@@ -249,6 +252,10 @@ if __name__ == '__main__':
         filters.ANIMATION,
         save_gif
     ))
+    # app.add_handler(MessageHandler(
+    #     filters.TEXT & ~filters.COMMAND,
+    #     ping
+    # ))
     
     app.add_handler(ConversationHandler(
         entry_points = [
