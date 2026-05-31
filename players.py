@@ -1,6 +1,8 @@
 from pathlib import Path
 from telegram import User, File
 import json
+import asyncio
+import imageio
 
 players = {}
 
@@ -73,12 +75,38 @@ class Player:
             if path.is_file()
             and path.suffix.lower() in image_formats
         ]
-    async def save_slide(self, attachment, extension):
+    
+    async def save_slide(self, attachment, extension=None) -> Path:
+        if extension is None:
+            if attachment.file_name is not None:
+                extension = attachment.file_name.split('.')[-1]
+            else:
+                extension = 'mp4'   # for imageio
         file_name = f"{self.count_slides + 1}.{extension}"
         file_path = self.path / Path(file_name)
         file = await attachment.get_file()
+        
         await file.download_to_drive(file_path)
         self.update_slides()
+        return file_path
+    
+    async def save_gif(self, attachment) -> Path:
+        mp4_path = await self.save_slide(attachment)
+        
+        def convert_to_gif(mp4_path):
+            gif_path = Path(mp4_path.parent) / Path(f"{mp4_path.stem}.gif")
+            with imageio.get_reader(mp4_path) as reader:
+                fps = reader.get_meta_data()['fps']
+                frames = [frame for frame in reader]
+            
+            imageio.mimsave(gif_path, frames, fps=fps)
+            mp4_path.unlink()
+            return gif_path
+        
+        gif_path = await asyncio.to_thread(convert_to_gif, mp4_path)
+        
+        self.update_slides()
+        return gif_path
         
     def save_title(self, title):
         self.titles.append(title)

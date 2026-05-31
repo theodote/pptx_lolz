@@ -44,7 +44,7 @@ Here's what you can do:
 /examples - See some ideas for submissions
 
 /title - Submit a presentation title in the following message
-/subtitle - Submit a subsitle in the following message
+/subtitle - Submit a subtitle in the following message
 To submit a slide, just send it!
 PPTX LOLZ(TM) supports images, animated GIFs, and uncompressed documents (PNGs, GIFs, JPGs)
 
@@ -71,11 +71,9 @@ Sounds stressful? Good - your presentations will be graded and are worth 0.5 ECT
     
 async def examples(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("""
-Here's some example submissions to help you get the ideas flowing.
-The subtitles should aid the titles, but NOT contain the actual topics to avoid semantic conflict.
-Remember, you want to submit something that OTHER PLAYERS will present in front of you. Choose your strategy accordingly.
+Here's some example submissions to help you get the ideas flowing:
 
-Slides: NO PORNOGRAPHY OR EXPLICIT CONTENT. We will be playing this in a shared space.
+Slides: NO NSFW OR EXPLICIT CONTENT. We will be playing this in a shared space.
 - Gaussian Gauss
 - Furry lesbians making out (as long as it's SFW it's allowed)
 - Complex circuit diagrams
@@ -94,6 +92,9 @@ Subtitles:
 - (presented in silly puppy voice)
 - (Try Not To Laugh (Impossible))
 - We did the Science. The numbers don't lie.
+The subtitles should aid the titles, but NOT contain the actual topics to avoid semantic conflict.
+
+Remember, you want to submit something that OTHER PLAYERS will present in front of you. Choose your strategy accordingly.
     """)
     
 
@@ -105,12 +106,11 @@ async def save_slide(update: Update, context: ContextTypes.DEFAULT_TYPE):
         attachment = update.message.effective_attachment
         if isinstance(attachment, Sequence):    # Photos are weird :/
             attachment = attachment[-1]
-            extension = "jpg"
+            await player.save_slide(attachment, "jpg")
         else:
-            extension = attachment.file_name.split('.')[-1]
-        await player.save_slide(attachment, extension)
+            await player.save_slide(attachment)
         
-        await update.message.reply_text("""
+        await update.message.reply_text(f"""
 Saved! You can submit {player.remaining_slides} more slides.
         """)
     else:
@@ -120,7 +120,23 @@ You can delete ALL of them and start fresh with /clear_slides.
         """)
     
 async def save_gif(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    pass
+    player = pl.players[update.effective_user.id]
+    
+    if player.remaining_slides > 0:
+        attachment = update.message.effective_attachment
+        await update.message.reply_text(f"""
+Converting the GIF, please wait...
+        """)
+        await player.save_gif(attachment)
+        
+        await update.message.reply_text(f"""
+Saved! You can submit {player.remaining_slides} more slides.
+        """)
+    else:
+        await update.message.reply_text("""
+You're out of slides!
+You can delete ALL of them and start fresh with /clear_slides.
+        """)
 
 
     
