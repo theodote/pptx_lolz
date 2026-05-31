@@ -21,7 +21,7 @@ class Player:
         if user:    # for creating new players
             self.id = user.id
             self.first_name = user.first_name
-            self.last_name = user.last_name
+            self.last_name = user.last_name or ''
             self.username = user.username
         
         global players
@@ -44,7 +44,7 @@ class Player:
             with open(self.user_path, 'r') as f:
                 user_data = json.load(f)
             self.first_name = user_data['first_name']
-            self.last_name = user_data['last_name']
+            self.last_name = user_data['last_name'] or ''
             self.username = user_data['username']
             with open(self.titles_path, 'r') as f:
                 self.titles = json.load(f)

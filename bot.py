@@ -1,4 +1,5 @@
 import logging
+import telegram
 from telegram import Update
 from telegram.ext import (
     filters, ApplicationBuilder, ContextTypes,
@@ -86,6 +87,7 @@ Titles:
 - the situation is getting out of control
 - My childhood pictures :)
 - A Very Scientific Title With Several Acronyms
+- My trip to the Island
 
 Subtitles:
 - co-authored with Univ. Prof. Dipl.-Ing. [Name Surname]
@@ -109,15 +111,21 @@ async def save_slide(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if player.remaining_slides > 0:
         attachment = update.message.effective_attachment
-        if isinstance(attachment, Sequence):    # Photos are weird :/
-            attachment = attachment[-1]
-            await player.save_slide(attachment, "jpg")
-        else:
-            await player.save_slide(attachment)
+        try:
+            if isinstance(attachment, Sequence):    # Photos are weird :/
+                attachment = attachment[-1]
+                await player.save_slide(attachment, "jpg")
+            else:
+                await player.save_slide(attachment)
         
-        await update.message.reply_text(f"""
+            await update.message.reply_text(f"""
 Saved! You can submit {player.remaining_slides} more slides.
-        """)
+            """)
+        except telegram.error.BadRequest:
+            await update.message.reply_text(f"""
+Whoa, that's a little too big. You have anything under 20MB?.
+            """)
+    
     else:
         await update.message.reply_text("""
 You're out of slides!
@@ -128,15 +136,21 @@ async def save_gif(update: Update, context: ContextTypes.DEFAULT_TYPE):
     player = pl.players[update.effective_user.id]
     
     if player.remaining_slides > 0:
-        attachment = update.message.effective_attachment
-        await update.message.reply_text(f"""
-Converting the GIF, please wait...
-        """)
-        await player.save_gif(attachment)
-        
-        await update.message.reply_text(f"""
+        try:
+            attachment = update.message.effective_attachment
+            await update.message.reply_text(f"""
+Downloading the GIF, please wait...
+            """)
+            await player.save_gif(attachment)
+            
+            await update.message.reply_text(f"""
 Saved! You can submit {player.remaining_slides} more slides.
-        """)
+            """)
+        except telegram.error.BadRequest:
+            await update.message.reply_text(f"""
+Whoa, that's a little too big. You have anything under 20MB?.
+            """)
+            
     else:
         await update.message.reply_text("""
 You're out of slides!

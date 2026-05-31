@@ -1,4 +1,5 @@
 *.env
 players/
+presentation/
 *.pptx
 __pycache__/*
