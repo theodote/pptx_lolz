@@ -64,7 +64,7 @@ class Player:
     @property
     def remaining_titles(self): return MAX_TITLES - self.count_titles
     @property
-    def remaining_subtitles(self): return MAX_SUBTITLES - self.count_titles
+    def remaining_subtitles(self): return MAX_SUBTITLES - self.count_subtitles
     
     def update_slides(self):
         self.slide_paths = [
@@ -74,12 +74,18 @@ class Player:
             and path.suffix.lower() in image_formats
         ]
     async def save_slide(self, attachment, extension):
-        print(attachment)
         file_name = f"{self.count_slides + 1}.{extension}"
         file_path = self.path / Path(file_name)
         file = await attachment.get_file()
         await file.download_to_drive(file_path)
         self.update_slides()
+        
+    def save_title(self, title):
+        self.titles.append(title)
+        self.save_titles()
+    def save_subtitle(self, subtitle):
+        self.subtitles.append(subtitle)
+        self.save_subtitles()
         
     def save_user(self):
         with open(self.user_path, 'w') as f:
@@ -98,6 +104,17 @@ class Player:
     def save(self):
         self.save_user()
         self.save_titles()
+        self.save_subtitles()
+        
+    def clear_slides(self):
+        for path in self.slide_paths:
+            path.unlink()
+        self.update_slides()
+    def clear_titles(self):
+        self.titles.clear()
+        self.save_titles()
+    def clear_subtitles(self):
+        self.subtitles.clear()
         self.save_subtitles()
         
 def load_players():

@@ -1,0 +1,4 @@
+imageio
+imageio-ffmpeg
+python-telegram-bot
+python-pptx
