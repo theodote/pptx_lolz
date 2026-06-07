@@ -51,6 +51,7 @@ def generate_presentation(player: pl.Player, title_text: str, subtitle_text: str
     name_surname.text = f"{player.first_name} {(player.last_name or '')}"
     
     prs_path = presentations_path / f"{sanitize_filename(player.first_name)}.pptx"
+    presentations_path.mkdir(parents=True, exist_ok=True)
     prs.save(prs_path)
     
 

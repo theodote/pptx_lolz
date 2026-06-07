@@ -5,6 +5,7 @@ from telegram.ext import (
     filters, ApplicationBuilder, ContextTypes,
     CommandHandler, MessageHandler, ConversationHandler
 )
+from telegram.error import NetworkError
 
 from collections.abc import Sequence
 from pathlib import Path
@@ -20,6 +21,14 @@ logger = logging.getLogger(__name__)
 
 
 
+async def error_handler(update, context):
+    if isinstance(context.error, NetworkError):
+        logger.warning("Network error (will retry): %s", context.error)
+    else:
+        logger.error("Unexpected error:", exc_info=context.error)
+
+
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:                # existing player
         player = pl.players[update.effective_user.id]
@@ -27,11 +36,19 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         player = pl.Player(user = update.effective_user)
         pl.players[update.effective_user.id] = player
         
+    logger.info(f"/start {player.id}")
     await update.message.reply_text(f"""
 Heyo {player.first_name}! You can submit:
 {player.remaining_slides} more slides,
 {player.remaining_titles} more titles, and
 {player.remaining_subtitles} more subtitles.
+
+Your titles:
+{'\n'.join(title for title in player.titles)}
+
+Your subtitles:
+{'\n'.join(subtitle for subtitle in player.subtitles)}
+
 
 Don't know what you're doing? Ask for /help.
     """)
@@ -244,8 +261,10 @@ INPUT_TITLE, INPUT_SUBTITLE = range(2)
 
 if __name__ == '__main__':
     with open("token.env") as f:
-        TOKEN = f.read()
+        TOKEN = f.read().strip()
     app = ApplicationBuilder().token(TOKEN).build()
+
+    app.add_error_handler(error_handler)
     
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help))
